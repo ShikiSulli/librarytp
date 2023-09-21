@@ -100,5 +100,31 @@ class Client {
         $this->phone = $phone;
         return $this;
     }
+    public static function getCustomerByName() : array
+{
+  
+    $sql = "SELECT * FROM book WHERE lastname = :lastname";
+ $db = Connect::connect();
+
+ $query = $db->query($sql);
+ $query->execute();
+ $books = $query->fetchAll(PDO::FETCH_ASSOC);
+ return $books;
+ 
+}
+public static function getCustomers() : array
+    {
+        //requet sql pour recup tous les résa en cours 
+        $sql = "SELECT * FROM customers
+        ORDER BY lastname, firstname";
+
+     $db = Connect::connect();
+     $query = $db->prepare($sql);
+     $query->execute();
+     $customer = $query->fetchAll(PDO::FETCH_ASSOC);
+     return $customer;
+     
+    }
+    
 }
 

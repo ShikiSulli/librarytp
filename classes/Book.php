@@ -1,4 +1,10 @@
 <?php
+
+//chargement de la classe Connect
+require 'configuration/Connect.php';
+//chargement de la classe Slug
+
+require 'services/Slug.php';
 class Book {
     private ?int $id;
     private ?string $title;
@@ -147,9 +153,115 @@ class Book {
     }
 
     public function setSlug($slug) {
-        $this->slug = $slug;
+        $res =Slug::toSlug($slug);
+        $this->slug = $res;
         return $this;
     }
+    // custom methode
+
+//
+public static function getBooks() : array
+{
+    //requet sql pour recup tous les livres
+    $sql = "SELECT * FROM book";
+ $db = Connect::connect();
+
+ $query = $db->query($sql);
+ $query->execute();
+ $books = $query->fetchAll(PDO::FETCH_ASSOC);
+ return $books;
+ 
+}
+
+//methode statique pour ajouter un livre
+public static function addBook($obj) : void
+{
+ 
+    
+    $db = Connect::connect();
+ 
+   
+   $query = $db->prepare("INSERT INTO book (title,author,description,category,year,isbn,slug)
+   VALUES (:title,:author,:description,:category,:year,:isbn,:slug);");
+  //on lie les valeurs de l'objet aux parametre de la requete SQL
+    $query->bindValue(':title',$obj->getTitle(),PDO::PARAM_STR);
+    $query->bindValue(':author',$obj->getAuthor(),PDO::PARAM_STR);
+    $query->bindValue(':description',$obj->getAuthor(),PDO::PARAM_STR);
+    $query->bindValue(':category',$obj->getCategory(),PDO::PARAM_STR);
+    $query->bindValue(':year',$obj->getYear(),PDO::PARAM_INT);
+    $query->bindValue(':isbn',$obj->getIsbn(),PDO::PARAM_STR);
+    $query->bindValue(':slug',$obj->getSlug(),PDO::PARAM_STR);
+  
+    $query->execute();
+    //on redirige vers la meme page avec un message de succès
+    if ($query == true)
+    {
+        header('Location: Books.php?success=1');
+    } else 
+        {
+            header('Location: Books.php?success=0');
+        }
+
+   
 
 }
 
+public static function getOneBook($slug) : array
+{
+    $db = Connect::connect();
+
+    //requet sql pour recup un livre
+
+ $query = $db->prepare("SELECT * FROM book WHERE slug = :slug");
+
+ $query->bindValue(':slug', $slug, PDO::PARAM_STR);
+
+ $query->execute();
+
+ return $query->fetch(PDO::FETCH_ASSOC);
+
+
+}
+
+public static function deleteBook($id): void
+{
+    $db = Connect::connect();
+
+    $query = $db->prepare("DELETE FROM book WHERE id = :id");
+
+    $query->bindValue(':id', $id, PDO::PARAM_INT);
+
+    $query->execute();
+
+    header('Location: /books.php');
+}
+public static function editBook($obj, $id): void
+{
+    $db = Connect::connect();
+
+    $query = $db->prepare("UPDATE book
+    SET title = :title,
+        author = :author,
+        description = :description,
+        category = :category,
+        year = :year,
+        isbn = :isbn,
+        slug = :slug
+    WHERE id = :id ;");
+
+
+
+    $query->bindValue(':id', $id, PDO::PARAM_INT);
+    $query->bindValue(':title',$obj->getTitle(),PDO::PARAM_STR);
+    $query->bindValue(':author',$obj->getAuthor(),PDO::PARAM_STR);
+    $query->bindValue(':description',$obj->getDescription(),PDO::PARAM_STR);
+    $query->bindValue(':category',$obj->getCategory(),PDO::PARAM_STR);
+    $query->bindValue(':year',$obj->getYear(),PDO::PARAM_INT);
+    $query->bindValue(':isbn',$obj->getIsbn(),PDO::PARAM_STR);
+    $query->bindValue(':slug',$obj->getSlug(),PDO::PARAM_STR);
+
+    $query->execute();
+
+     header('Location: book.php?slug='.$obj->getSlug());
+}
+}
